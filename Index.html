@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoVantage | Advanced Bitcoin Investment Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(-45deg, #0a0a0f, #1a1a2e, #16213e, #0f3460);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .glow-orange {
+            box-shadow: 0 0 40px rgba(249, 115, 22, 0.3);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card {
+            background: rgba(17, 17, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(249, 115, 22, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .ticker {
+            animation: ticker 30s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .signal-pulse {
+            animation: signal-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes signal-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .tab-active {
+            border-bottom: 2px solid #f97316;
+            color: #f97316;
+        }
+        
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-shine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-shine:hover::before {
+            left: 100%;
+        }
+        
+        .crypto-card {
+            transition: all 0.3s ease;
+        }
+        
+        .crypto-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(249, 115, 22, 0.2);
+        }
+        
+        .price-up { color: #22c55e; }
+        .price-down { color: #ef4444; }
+        
+        .progress-bar {
+            transition: width 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+
+    <!-- Live Price Ticker -->
+    <div class="fixed top-0 w-full bg-black/80 backdrop-blur-md z-50 border-b border-orange-500/20 overflow-hidden py-2">
+        <div class="flex whitespace-nowrap ticker" id="priceTicker">
+            <div class="flex gap-8 px-4 text-sm">
+                <span class="text-orange-400 font-bold">BTC/USD: <span id="btcPrice">$67,245.00</span> <span class="text-green-400">▲ +2.4%</span></span>
+                <span class="text-gray-400">ETH/USD: <span id="ethPrice">$3,521.80</span> <span class="text-green-400">▲ +1.8%</span></span>
+                <span class="text-gray-400">BNB/USD: <span id="bnbPrice">$432.15</span> <span class="text-red-400">▼ -0.5%</span></span>
+                <span class="text-orange-400 font-bold">SIGNAL: STRONG BUY</span>
+                <span class="text-gray-400">24h Volume: $42.8B</span>
+                <span class="text-gray-400">Market Cap: $1.32T</span>
+                <span class="text-orange-400">Fear & Greed: 72 (Greed)</span>
+                <span class="text-gray-400">BTC Dominance: 52.3%</span>
+                <span class="text-orange-400 font-bold">BTC/USD: $67,245.00 <span class="text-green-400">▲ +2.4%</span></span>
+                <span class="text-gray-400">ETH/USD: $3,521.80 <span class="text-green-400">▲ +1.8%</span></span>
+                <span class="text-gray-400">BNB/USD: $432.15 <span class="text-red-400">▼ -0.5%</span></span>
+                <span class="text-orange-400 font-bold">SIGNAL: STRONG BUY</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-10 w-full z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center glass rounded-2xl px-6 py-3">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center glow-orange">
+                    <i data-lucide="bitcoin" class="w-6 h-6 text-white"></i>
+                </div>
+                <span class="font-display text-2xl font-bold text-white">Crypto<span class="text-orange-500">Vantage</span></span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#dashboard" class="hover:text-orange-400 transition-colors">Dashboard</a>
+                <a href="#signals" class="hover:text-orange-400 transition-colors">Signals</a>
+                <a href="#market" class="hover:text-orange-400 transition-colors">Market</a>
+                <a href="#learn" class="hover:text-orange-400 transition-colors">Learn</a>
+                <a href="#pricing" class="hover:text-orange-400 transition-colors">Pricing</a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="openModal('loginModal')" class="hidden md:block text-sm font-medium hover:text-orange-400 transition-colors">Sign In</button>
+                <button onclick="openModal('registerModal')" class="bg-gradient-to-r from-orange-500 to-red-600 px-6 py-2.5 rounded-xl font-semibold text-sm btn-shine glow-orange hover:scale-105 transition-transform">
+                    Get Started
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-40 pb-20 px-6 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-8">
+                <div class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm">
+                    <span class="w-2 h-2 bg-green-500 rounded-full signal-pulse"></span>
+                    <span class="text-gray-300">AI-Powered Signals Active</span>
+                    <span class="text-orange-400 font-semibold">94.7% Accuracy</span>
+                </div>
+                
+                <h1 class="font-display text-5xl md:text-7xl font-bold leading-tight">
+                    Maximize Your <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Bitcoin Returns</span>
+                </h1>
+                
+                <p class="text-xl text-gray-400 max-w-lg leading-relaxed">
+                    Institutional-grade trading signals powered by machine learning. 
+                    Join 50,000+ investors leveraging real-time market intelligence.
+                </p>
+                
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="openModal('registerModal')" class="bg-gradient-to-r from-orange-500 to-red-600 px-8 py-4 rounded-2xl font-bold text-lg btn-shine glow-orange hover:scale-105 transition-transform flex items-center gap-2">
+                        <span>Start Free Trial</span>
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                    <button class="glass px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-white/10 transition-colors flex items-center gap-2">
+                        <i data-lucide="play-circle" class="w-5 h-5"></i>
+                        <span>Watch Demo</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-6 pt-4">
+                    <div class="flex -space-x-3">
+                        <img src="https://i.pravatar.cc/150?img=1" class="w-10 h-10 rounded-full border-2 border-black" alt="User">
+                        <img src="https://i.pravatar.cc/150?img=2" class="w-10 h-10 rounded-full border-2 border-black" alt="User">
+                        <img src="https://i.pravatar.cc/150?img=3" class="w-10 h-10 rounded-full border-2 border-black" alt="User">
+                        <img src="https://i.pravatar.cc/150?img=4" class="w-10 h-10 rounded-full border-2 border-black" alt="User">
+                    </div>
+                    <div class="text-sm">
+                        <div class="flex items-center gap-1 text-yellow-400">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <span class="text-white font-semibold ml-1">4.9/5</span>
+                        </div>
+                        <p class="text-gray-500">From 2,400+ reviews</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Trading Dashboard -->
+            <div class="relative float">
+                <div class="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl blur-2xl"></div>
+                <div class="relative glass-card rounded-3xl p-6 glow-orange">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="font-display text-xl font-bold">Live Trading Dashboard</h3>
+                            <p class="text-sm text-gray-400">Real-time BTC/USD analysis</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                            <span class="text-green-400 text-sm font-semibold">LIVE</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Signal Strength -->
+                    <div class="mb-6 p-4 rounded-2xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-300">Current Signal</span>
+                            <span class="text-green-400 font-bold text-lg">STRONG BUY</span>
+                        </div>
+                        <div class="flex gap-1 h-3">
+                            <div class="flex-1 bg-green-500 rounded-l-full"></div>
+                            <div class="flex-1 bg-green-500"></div>
+                            <div class="flex-1 bg-green-500"></div>
+                            <div class="flex-1 bg-green-500"></div>
+                            <div class="flex-1 bg-green-500/30 rounded-r-full"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>Sell</span>
+                            <span>Neutral</span>
+                            <span class="text-green-400 font-semibold">Buy</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Chart -->
+                    <div class="chart-container mb-4">
+                        <canvas id="liveChart"></canvas>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="glass rounded-xl p-3">
+                            <div class="text-xs text-gray-400">Entry</div>
+                            <div class="font-bold text-orange-400" id="entryPrice">$65,200</div>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <div class="text-xs text-gray-400">Target</div>
+                            <div class="font-bold text-green-400" id="targetPrice">$72,000</div>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <div class="text-xs text-gray-400">Stop Loss</div>
+                            <div class="font-bold text-red-400" id="stopLoss">$63,500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Real-Time Market Data Section -->
+    <section id="market" class="py-20 px-6 bg-black/20">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <span class="text-orange-500 font-semibold text-sm uppercase tracking-wider">Live Market Data</span>
+                <h2 class="font-display text-4xl font-bold mt-4">Real-Time Cryptocurrency Prices</h2>
+                <p class="text-gray-400 mt-4">Track top cryptocurrencies with live price updates and market analysis</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" id="cryptoGrid">
+                <!-- Crypto cards will be populated by JavaScript -->
+            </div>
+            
+            <div class="mt-12 glass-card rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-display text-xl font-bold">Market Overview</h3>
+                    <div class="flex gap-2">
+                        <button onclick="updateTimeframe('1h')" class="px-4 py-2 rounded-lg bg-orange-500/20 text-orange-400 text-sm font-medium">1H</button>
+                        <button onclick="updateTimeframe('24h')" class="px-4 py-2 rounded-lg glass text-gray-400 text-sm font-medium hover:text-white">24H</button>
+                        <button onclick="updateTimeframe('7d')" class="px-4 py-2 rounded-lg glass text-gray-400 text-sm font-medium hover:text-white">7D</button>
+                        <button onclick="updateTimeframe('30d')" class="px-4 py-2 rounded-lg glass text-gray-400 text-sm font-medium hover:text-white">30D</button>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="marketChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Crypto Investment Education Section -->
+    <section id="learn" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="text-orange-500 font-semibold text-sm uppercase tracking-wider">Education Center</span>
+                <h2 class="font-display text-4xl font-bold mt-4">Master Crypto Investing</h2>
+                <p class="text-gray-400 mt-4 max-w-2xl mx-auto">Learn everything from Bitcoin basics to advanced trading strategies</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-orange-500/20 to-red-600/20 flex items-center justify-center">
+                        <i data-lucide="book-open" class="w-16 h-16 text-orange-400"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs text-orange-400 font-semibold uppercase">Beginner</span>
+                        <h3 class="font-display text-xl font-bold mt-2 mb-3">Bitcoin Basics</h3>
+                        <p class="text-gray-400 text-sm mb-4">Understanding blockchain technology, wallets, and how to buy your first Bitcoin safely.</p>
+                        <ul class="space-y-2 text-sm text-gray-300 mb-4">
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> What is Bitcoin?</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> How to store crypto</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Security best practices</li>
+                        </ul>
+                        <button class="w-full py-3 rounded-xl border border-orange-500/50 text-orange-400 font-semibold hover:bg-orange-500/10 transition-colors">Start Learning</button>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-blue-500/20 to-purple-600/20 flex items-center justify-center">
+                        <i data-lucide="trending-up" class="w-16 h-16 text-blue-400"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs text-blue-400 font-semibold uppercase">Intermediate</span>
+                        <h3 class="font-display text-xl font-bold mt-2 mb-3">Technical Analysis</h3>
+                        <p class="text-gray-400 text-sm mb-4">Learn to read charts, identify patterns, and use indicators for better trading decisions.</p>
+                        <ul class="space-y-2 text-sm text-gray-300 mb-4">
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Chart patterns</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Support & resistance</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> RSI & MACD indicators</li>
+                        </ul>
+                        <button class="w-full py-3 rounded-xl border border-blue-500/50 text-blue-400 font-semibold hover:bg-blue-500/10 transition-colors">Start Learning</button>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-purple-500/20 to-pink-600/20 flex items-center justify-center">
+                        <i data-lucide="shield" class="w-16 h-16 text-purple-400"></i>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs text-purple-400 font-semibold uppercase">Advanced</span>
+                        <h3 class="font-display text-xl font-bold mt-2 mb-3">Risk Management</h3>
+                        <p class="text-gray-400 text-sm mb-4">Advanced strategies for portfolio allocation, position sizing, and protecting your investments.</p>
+                        <ul class="space-y-2 text-sm text-gray-300 mb-4">
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Position sizing</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Stop-loss strategies</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-green-400"></i> Portfolio diversification</li>
+                        </ul>
+                        <button class="w-full py-3 rounded-xl border border-purple-500/50 text-purple-400 font-semibold hover:bg-purple-500/10 transition-colors">Start Learning</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Investment Calculator -->
+            <div class="mt-12 glass-card rounded-2xl p-8">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold mb-4">Investment Calculator</h3>
+                        <p class="text-gray-400 mb-6">See how much you could have made with our signals</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Initial Investment ($)</label>
+                                <input type="number" id="investmentAmount" value="1000" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" oninput="calculateReturns()">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Time Period</label>
+                                <select id="timePeriod" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" onchange="calculateReturns()">
+                                    <option value="1">1 Month</option>
+                                    <option value="3">3 Months</option>
+                                    <option value="6" selected>6 Months</option>
+                                    <option value="12">1 Year</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-sm text-gray-400 mb-2">Potential Return</div>
+                        <div class="text-4xl font-display font-bold text-green-400 mb-2" id="potentialReturn">$1,847.00</div>
+                        <div class="text-sm text-green-400 mb-6">+84.7% with CryptoVantage signals</div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">Buy & Hold Return</span>
+                                <span class="text-orange-400" id="buyHoldReturn">$1,324.00 (+32.4%)</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-orange-500 to-green-500 h-2 rounded-full progress-bar" style="width: 84.7%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Dashboard Preview -->
+    <section id="dashboard" class="py-24 px-6 bg-black/20">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="text-orange-500 font-semibold text-sm uppercase tracking-wider">Member Dashboard</span>
+                <h2 class="font-display text-4xl font-bold mt-4">Your Personal Trading Command Center</h2>
+            </div>
+            
+            <div class="glass-card rounded-3xl p-8">
+                <div class="grid md:grid-cols-4 gap-6 mb-8">
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-display font-bold text-green-400 mb-1">+127%</div>
+                        <div class="text-sm text-gray-400">Portfolio Growth</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-display font-bold text-orange-400 mb-1">156</div>
+                        <div class="text-sm text-gray-400">Signals Received</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-display font-bold text-blue-400 mb-1">94.7%</div>
+                        <div class="text-sm text-gray-400">Win Rate</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-display font-bold text-purple-400 mb-1">$12.4K</div>
+                        <div class="text-sm text-gray-400">Total Profit</div>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass rounded-2xl p-6">
+                        <h4 class="font-semibold mb-4">Recent Signals</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                        <i data-lucide="arrow-up" class="w-5 h-5 text-green-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">BTC Long</div>
+                                        <div class="text-xs text-gray-400">2 hours ago</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-green-400 font-bold">+12.4%</div>
+                                    <div class="text-xs text-gray-400">Profit</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                        <i data-lucide="arrow-up" class="w-5 h-5 text-green-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">ETH Long</div>
+                                        <div class="text-xs text-gray-400">5 hours ago</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-green-400 font-bold">+8.7%</div>
+                                    <div class="text-xs text-gray-400">Profit</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                                        <i data-lucide="arrow-down" class="w-5 h-5 text-red-400"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-sm">SOL Short</div>
+                                        <div class="text-xs text-gray-400">1 day ago</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-red-400 font-bold">-2.1%</div>
+                                    <div class="text-xs text-gray-400">Loss</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-2xl p-6">
+                        <h4 class="font-semibold mb-4">Portfolio Allocation</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Bitcoin (BTC)</span>
+                                    <span class="text-orange-400">45%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-orange-500 h-2 rounded-full" style="width: 45%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Ethereum (ETH)</span>
+                                    <span class="text-blue-400">30%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 30%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Altcoins</span>
+                                    <span class="text-purple-400">15%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 15%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span>Stablecoins</span>
+                                    <span class="text-green-400">10%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 10%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Modal -->
+    <div id="registerModal" class="modal">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full mx-4 relative">
+            <button onclick="closeModal('registerModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 glow-orange">
+                    <i data-lucide="user-plus" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold">Create Your Account</h3>
+                <p class="text-gray-400 text-sm mt-2">Start your 14-day free trial today</p>
+            </div>
+            
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Full Name</label>
+                    <input type="text" required class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Email</label>
+                    <input type="email" required class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="john@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Password</label>
+                    <input type="password" required class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Phone (optional)</label>
+                    <input type="tel" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="+1 (555) 000-0000">
+                </div>
+                
+                <div class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" required class="w-4 h-4 rounded border-white/10 bg-black/30 text-orange-500 focus:ring-orange-500">
+                    <span class="text-gray-400">I agree to the <a href="#" class="text-orange-400">Terms</a> and <a href="#" class="text-orange-400">Privacy Policy</a></span>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-600 py-4 rounded-xl font-bold btn-shine glow-orange hover:scale-105 transition-transform">
+                    Create Free Account
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-400">Already have an account? <button onclick="switchModal('registerModal', 'loginModal')" class="text-orange-400 font-semibold">Sign In</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full mx-4 relative">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 glow-orange">
+                    <i data-lucide="log-in" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="font-display text-2xl font-bold">Welcome Back</h3>
+                <p class="text-gray-400 text-sm mt-2">Sign in to access your dashboard</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Email</label>
+                    <input type="email" required class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="john@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Password</label>
+                    <input type="password" required class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" placeholder="••••••••">
+                </div>
+                
+                <div class="flex justify-between text-sm">
+                    <label class="flex items-center gap-2 text-gray-400">
+                        <input type="checkbox" class="w-4 h-4 rounded border-white/10 bg-black/30 text-orange-500">
+                        Remember me
+                    </label>
+                    <a href="#" class="text-orange-400">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-600 py-4 rounded-xl font-bold btn-shine glow-orange hover:scale-105 transition-transform">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-400">Don't have an account? <button onclick="switchModal('loginModal', 'registerModal')" class="text-orange-400 font-semibold">Create one</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-12 px-6 bg-black/40">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="bitcoin" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <span class="font-display text-xl font-bold">Crypto<span class="text-orange-500">Vantage</span></span>
+                    </div>
+                    <p class="text-sm text-gray-400">Advanced Bitcoin investment platform with AI-powered trading signals.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-orange-400">Trading Signals</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Market Data</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Portfolio</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-orange-400">Education</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Blog</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Help Center</a></li>
+                        <li><a href="#" class="hover:text-orange-400">API Docs</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-orange-400">Privacy</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Terms</a></li>
+                        <li><a href="#" class="hover:text-orange-400">Risk Disclosure</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="pt-8 border-t border-white/10 text-center text-sm text-gray-500">
+                <p>© 2024 CryptoVantage. All rights reserved. Cryptocurrency trading involves substantial risk.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function switchModal(from, to) {
+            closeModal(from);
+            setTimeout(() => openModal(to), 100);
+        }
+        
+        // Close modal on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal(modal.id);
+            });
+        });
+        
+        // Form handlers
+        function handleRegister(e) {
+            e.preventDefault();
+            alert('Account created successfully! Welcome to CryptoVantage.');
+            closeModal('registerModal');
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
+            alert('Welcome back! Redirecting to your dashboard...');
+            closeModal('loginModal');
+        }
+        
+        // Real-time crypto data
+        const cryptoData = [
+            { symbol: 'BTC', name: 'Bitcoin', price: 67245.00, change: 2.4, volume: '28.4B', marketCap: '1.32T', color: '#f97316' },
+            { symbol: 'ETH', name: 'Ethereum', price: 3521.80, change: 1.8, volume: '15.2B', marketCap: '423B', color: '#3b82f6' },
+            { symbol: 'BNB', name: 'Binance Coin', price: 432.15, change: -0.5, volume: '1.8B', marketCap: '66B', color: '#eab308' },
+            { symbol: 'SOL', name: 'Solana', price: 142.30, change: 5.2, volume: '3.2B', marketCap: '62B', color: '#a855f7' }
+        ];
+        
+        function renderCryptoCards() {
+            const grid = document.getElementById('cryptoGrid');
+            grid.innerHTML = cryptoData.map(crypto => `
+                <div class="glass-card rounded-2xl p-6 crypto-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: ${crypto.color}20">
+                                <span class="font-bold" style="color: ${crypto.color}">${crypto.symbol}</span>
+                            </div>
+                            <div>
+                                <div class="font-semibold">${crypto.name}</div>
+                                <div class="text-xs text-gray-400">${crypto.symbol}/USD</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-lg">$${crypto.price.toLocaleString()}</div>
+                            <div class="${crypto.change >= 0 ? 'price-up' : 'price-down'} text-sm">
+                                ${crypto.change >= 0 ? '▲' : '▼'} ${Math.abs(crypto.change)}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="text-gray-400 text-xs">Volume (24h)</div>
+                            <div class="font-semibold">$${crypto.volume}</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-xs">Market Cap</div>
+                            <div class="font-semibold">$${crypto.marketCap}</div>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 py-2 rounded-lg border border-orange-500/50 text-orange-400 text-sm font-semibold hover:bg-orange-500/10 transition-colors">
+                        View Analysis
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        renderCryptoCards();
+        
+        // Live price updates simulation
+        setInterval(() => {
+            cryptoData.forEach(crypto => {
+                const change = (Math.random() - 0.5) * 0.1;
+                crypto.price += change;
+                crypto.change += (Math.random() - 0.5) * 0.2;
+            });
+            renderCryptoCards();
+            
+            // Update ticker
+            document.getElementById('btcPrice').textContent = '$' + cryptoData[0].price.toFixed(2);
+            document.getElementById('ethPrice').textContent = '$' + cryptoData[1].price.toFixed(2);
+            document.getElementById('bnbPrice').textContent = '$' + cryptoData[2].price.toFixed(2);
+        }, 5000);
+        
+        // Investment calculator
+        function calculateReturns() {
+            const amount = parseFloat(document.getElementById('investmentAmount').value) || 1000;
+            const months = parseInt(document.getElementById('timePeriod').value) || 6;
+            
+            const cvReturn = amount * (1 + (0.847 * months / 6));
+            const bhReturn = amount * (1 + (0.324 * months / 6));
+            
+            document.getElementById('potentialReturn').textContent = '$' + cvReturn.toFixed(2);
+            document.getElementById('buyHoldReturn').textContent = '$' + bhReturn.toFixed(2) + ' (+' + (32.4 * months / 6).toFixed(1) + '%)';
+        }
+        
+        // Charts
+        const ctx = document.getElementById('liveChart').getContext('2d');
+        const liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25', '10:30'],
+                datasets: [{
+                    label: 'BTC Price',
+                    data: [65000, 65200, 65800, 65500, 66200, 66800, 67245],
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        display: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#9ca3af', callback: (val) => '$' + val }
+                    }
+                }
+            }
+        });
+        
+        // Market chart
+        const marketCtx = document.getElementById('marketChart').getContext('2d');
+        const marketChart = new Chart(marketCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [
+                    {
+                        label: 'CryptoVantage Strategy',
+                        data: [100, 115, 132, 128, 145, 168, 185, 195, 210, 225, 240, 247],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Buy & Hold',
+                        data: [100, 108, 120, 115, 125, 135, 142, 148, 155, 162, 170, 175],
+                        borderColor: '#f97316',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff' }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#9ca3af' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af' }
+                    }
+                }
+            }
+        });
+        
+        function updateTimeframe(period) {
+            // Simulate data update
+            const multipliers = { '1h': 0.1, '24h': 1, '7d': 7, '30d': 30 };
+            const multiplier = multipliers[period] || 1;
+            
+            marketChart.data.datasets[0].data = marketChart.data.datasets[0].data.map(v => v * (0.95 + Math.random() * 0.1));
+            marketChart.update();
+        }
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
